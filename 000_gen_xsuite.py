@@ -41,11 +41,11 @@ tw_after_reload = mad_thin.twiss()
 
 n_slices_sbend = 4
 mad_thin.input(f'''
-!select, flag=makethin, clear;
-!select, flag=makethin, class=rbend, slice = 4, thick = false;
-!select, flag=makethin, class=sbend, slice = {n_slices_sbend}, thick = false;
-!select, flag=makethin, class=quadrupole, slice = 10, thick = false;
-!select, flag=makethin, class=sextupole, slice = 4, thick=false;
+select, flag=makethin, clear;
+select, flag=makethin, class=rbend, slice = 4, thick = false;
+select, flag=makethin, class=sbend, slice = 4, thick = false;
+select, flag=makethin, class=quadrupole, slice = 10, thick = false;
+select, flag=makethin, class=sextupole, slice = 4, thick=false;
 makethin, sequence={seq_name}, style=teapot, makedipedge=true;
 ''')
 mad_thin.use(seq_name)
