@@ -37,6 +37,13 @@ mad_thin = Madx()
 mad_thin.call(f'{seq_name}_no_expr.seq')
 mad_thin.beam(energy=41.0,particle='antiproton')
 mad_thin.use(seq_name)
+seq_thin = mad_thin.sequence[seq_name]
+
+# Makethin does not work with zero angle on the bends (putting a very small one)
+for ee in seq_thin.elements:
+     if hasattr(ee, 'k0') and ee.k0 != 0 and ee.angle == 0:
+         ee.angle = 1e-20
+
 tw_after_reload = mad_thin.twiss()
 
 n_slices_sbend = 4
@@ -48,34 +55,15 @@ select, flag=makethin, class=quadrupole, slice = 10, thick = false;
 select, flag=makethin, class=sextupole, slice = 4, thick=false;
 makethin, sequence={seq_name}, style=teapot, makedipedge=true;
 ''')
+
+
 mad_thin.use(seq_name)
-seq_thin = mad_thin.sequence[seq_name]
-#tw_thin = mad_thin.twiss(betx=1, bety=1, alfx=0, alfy=0, dx=0, dy=0)
 
-for ii, ee in list(enumerate(seq_thin.elements))[::100]:
-    nn = ee.name
-    print(nn)
-    mad_thin.input(f'use,sequence=hsr41,range=#s/{nn};')
-    mad_thin.twiss(betx=1, bety=1)
+tw_thin = mad_thin.twiss()
 
-# This works
-ii = 3490
-nn = seq_thin.elements[ii].name
-mad_thin.input(f'use,sequence=hsr41,range=#s/{nn};')
-mad_thin.twiss(betx=1, bety=1)
+# Now it works
+prrrrr
 
-# This does not work
-ii = 3491
-nn = seq_thin.elements[ii].name
-mad_thin.input(f'use,sequence=hsr41,range=#s/{nn};')
-mad_thin.twiss(betx=1, bety=1)
-
-for ee in seq_thick.expanded_elements:
-    print(ee.name, ee.base_type.name)
-    if ee.base_type.name == 'sbend':
-        break
-
-prrrr
 #################################
 # Build line from MAD-X lattice #
 #################################
