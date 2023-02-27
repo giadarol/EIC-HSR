@@ -50,19 +50,14 @@ n_slices_sbend = 4
 mad_thin.input(f'''
 select, flag=makethin, clear;
 select, flag=makethin, class=rbend, slice = 4, thick = false;
-select, flag=makethin, class=sbend, slice = 4, thick = false;
+select, flag=makethin, class=sbend, slice = 10, thick = false;
 select, flag=makethin, class=quadrupole, slice = 10, thick = false;
 select, flag=makethin, class=sextupole, slice = 4, thick=false;
 makethin, sequence={seq_name}, style=teapot, makedipedge=true;
 ''')
-
-
 mad_thin.use(seq_name)
 
 tw_thin = mad_thin.twiss()
-
-# Now it works
-prrrrr
 
 #################################
 # Build line from MAD-X lattice #
@@ -75,10 +70,22 @@ line.particle_ref = xp.Particles(gamma=seq_thin.beam.gamma,
                                  mass0=xp.PROTON_MASS_EV,
                                  q0=seq_thin.beam.charge)
 
-twiss_table_xt = xt.Tracker(line=line.copy()).twiss()
-plt.figure(0)
-plt.plot(twiss_table['s'],twiss_table_xt['betx'],'xb')
-plt.plot(twiss_table['s'],twiss_table_xt['bety'],'xg')
+line.build_tracker()
+
+tw_xs = line.twiss(method='4d')
+
+plt.close('all')
+
+plt.figure()
+plt.plot(tw_thick['s'], tw_thick['betx'], label='betx thick')
+plt.plot(tw_thick['s'], tw_thick['bety'], label='bety thick')
+plt.plot(tw_thin['s'], tw_thin['betx'], label='betx thin')
+plt.plot(tw_thin['s'], tw_thin['bety'], label='bety thin')
+plt.plot(tw_xs['s'], tw_xs['betx'], label='betx xsuite')
+plt.plot(tw_xs['s'], tw_xs['bety'], label='bety xsuite')
+
+plt.legend()
+plt.show()
 
 #context = xo.ContextCpu()
 
