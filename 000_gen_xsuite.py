@@ -34,7 +34,8 @@ mad_thick.use(seq_name)
 mad_thick.input(f'''
 seqedit, sequence={seq_name};
 flatten;
-install, element=start_check, class=marker, at=3824.060940;
+remove, element=d2_pf;
+install, element=start_check, class=marker, at=3825.060940;
 flatten;
 endedit;
 ''')
@@ -225,10 +226,10 @@ alfy_thin_on_thick_check = np.interp(tw_check_thick.s, tw_check_thin['s'], tw_ch
 plt.figure()
 plt.plot(tw_check_thick['s'], tw_check_thick['bety']/bety_thin_on_thick_check -1)
 
-s_b0apf = tw_check_thick.dframe().loc[tw_check_thick.name=='b0apf:1', 's'].values[0]
+# s_b0apf = tw_check_thick.dframe().loc[tw_check_thick.name=='b0apf:1', 's'].values[0]
 s_b0pf = tw_check_thick.dframe().loc[tw_check_thick.name=='b0pf:1', 's'].values[0]
 
-plt.axvline(s_b0apf, color='k')
+# plt.axvline(s_b0apf, color='k')
 plt.axvline(s_b0pf, color='r')
 
 plt.show()
