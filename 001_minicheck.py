@@ -36,6 +36,7 @@ config = {
     'on_translation': 0,
     'on_rotation': 0,
     'on_k1': 0,
+    'on_shifts': 0,
     'kill_orbit': True
 }
 
@@ -47,10 +48,14 @@ for ll in sequence_src.split('\n'):
     elif 'yrotation' in ll:
         ll = ll.replace(';', "*on_rotation;")
         ll = ll.replace('angle=', "angle:=")
+    elif 'dx = ' in ll:
+        ll = ll.replace(';', "*on_shifts;")
+        ll = ll.replace('dx = ', "dx:=")
     new_lines.append(ll)
 new_lines.append(f"on_translation={config['on_translation']};")
 new_lines.append(f"on_rotation={config['on_rotation']};")
 new_lines.append(f"on_k1={config['on_k1']};")
+new_lines.append(f"on_shifts={config['on_shifts']};")
 sequence_src = '\n'.join(new_lines)
 
 tw_init = {'betx': 84.02557752667167,
@@ -86,7 +91,7 @@ select, flag=makethin, class=quadrupole, slice = 20, thick=false;
 select, flag=makethin, class=sextupole, slice = 1, thick=true;
 select, flag=makethin, class=sbend, slice=0;
 
-select, flag=makethin, pattern=b0pf, slice=1, thick=false;
+select, flag=makethin, pattern=b0pf, slice=1000, thick=false;
 
 makethin, sequence=hsr41, style=teapot, makedipedge=false;
 ''')
@@ -94,8 +99,7 @@ mad_thin.use('hsr41')
 
 tw_thin = mad_thin.twiss(**tw_init)
 
-bety_thin_on_thick_check = np.interp(tw_thick.s, tw_thin['s'], tw_thin['bety'])
-alfy_thin_on_thick_check = np.interp(tw_thick.s, tw_thin['s'], tw_thin['alfy'])
+bety_thin_on_thick_check = np.interp(tw_thick.s, tw_thin['s'], np.sqrt(tw_thin['bety']))**2
 
 plt.close('all')
 plt.figure()
