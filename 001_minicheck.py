@@ -8,7 +8,7 @@ start_check: marker,l= 0,kmax= 0,kmin= 0,calib= 0,polarity= 0,type,apertype="cir
 ,exact= -1,nst= -1,fringe= 0,bend_fringe=false,kill_ent_fringe=false,kill_exi_fringe=false,dx= 0,dy= 0,ds= 0,dtheta= 0,dphi= 0,dpsi= 0,aper_tilt= 0,comments;
 ptb_b0pf: translation,dx= -0.03022642196;
 prb_b0pf: yrotation,angle= 0.02670439316;
-b0pf: sbend,l= 1.2,k0= -0.008660083518,k1= -0.05940545468;
+b0pf: sbend,l= 1.2,k0= -0.008660083518, k1= -0.05940545468;
 pte_b0pf: translation,dx= -0.0007490490899;
 pre_b0pf: yrotation,angle= -0.025;
 ptb_sol_f: translation,dx= -0.04999479183;
@@ -17,7 +17,7 @@ sol_half: solenoid,l= 2;
 star_detect_f: sol_half;
 pre_sol_f: yrotation,angle= -0.025;
 ip6w: marker;
-hsr41: sequence, l = 3832.94851;
+hsr41: sequence, l = 8;
 start_check, at = 0;
 ptb_b0pf, at = 0.8851317104, dx = -0.03022642196 ;
 prb_b0pf, at = 0.8851317104;
@@ -32,15 +32,15 @@ ip6w, at = 7.88756965;
 endsequence;
 '''
 
-new_lines = []
-for ll in sequence_src.split('\n'):
-    if 'translation' in ll:
-        ll = ll.replace(';', "*on_translation;")
-    new_lines.append(ll)
+# new_lines = []
+# for ll in sequence_src.split('\n'):
+#     if 'translation' in ll:
+#         ll = ll.replace(';', "*on_translation;")
+#     new_lines.append(ll)
+# new_lines.append('on_translation=1;')
+# sequence_src = '\n'.join(new_lines)
 
-sequence_src = '\n'.join(new_lines)
-
-dct_check = {'betx': 84.02557752667167,
+tw_init = {'betx': 84.02557752667167,
             'alfx': 14.23087869857309,
             'bety': 737.8650722816444,
             'alfy': 56.03568671202535,
@@ -78,8 +78,15 @@ tw_thin = mad_thin.twiss(**tw_init)
 bety_thin_on_thick_check = np.interp(tw_thick.s, tw_thin['s'], tw_thin['bety'])
 alfy_thin_on_thick_check = np.interp(tw_thick.s, tw_thin['s'], tw_thin['alfy'])
 
+plt.close('all')
 plt.figure()
+ax1 = plt.subplot(211)
 plt.plot(tw_thick['s'], tw_thick['bety']/bety_thin_on_thick_check -1)
+
+ax2 = plt.subplot(212, sharex=ax1)
+plt.plot(tw_thick['s'], tw_thick.x)
+plt.plot(tw_thin['s'], tw_thin.x)
+
 
 s_b0pf = tw_thick.dframe().loc[tw_thick.name=='b0pf:1', 's'].values[0]
 
