@@ -8,7 +8,7 @@ start_check: marker,l= 0,kmax= 0,kmin= 0,calib= 0,polarity= 0,type,apertype="cir
 ,exact= -1,nst= -1,fringe= 0,bend_fringe=false,kill_ent_fringe=false,kill_exi_fringe=false,dx= 0,dy= 0,ds= 0,dtheta= 0,dphi= 0,dpsi= 0,aper_tilt= 0,comments;
 ptb_b0pf: translation,dx= -0.03022642196;
 prb_b0pf: yrotation,angle= 0.02670439316;
-b0pf: sbend,l= 1.2,k0= -0.008660083518, k1:= -0.05940545468*on_k1;
+b0pf: sbend,l= 1.2,k0= -0.008660083518, k1:= -0.05940545468*on_k1, angle=1e-30;
 pte_b0pf: translation,dx= -0.0007490490899;
 pre_b0pf: yrotation,angle= -0.025;
 ptb_sol_f: translation,dx= -0.04999479183;
@@ -34,6 +34,7 @@ endsequence;
 
 config = {
     'on_translation': 0,
+    'on_rotation': 0,
     'on_k1': 0,
     'kill_orbit': True
 }
@@ -43,8 +44,12 @@ for ll in sequence_src.split('\n'):
     if 'translation' in ll:
         ll = ll.replace(';', "*on_translation;")
         ll = ll.replace('dx=', "dx:=")
+    elif 'yrotation' in ll:
+        ll = ll.replace(';', "*on_rotation;")
+        ll = ll.replace('angle=', "angle:=")
     new_lines.append(ll)
 new_lines.append(f"on_translation={config['on_translation']};")
+new_lines.append(f"on_rotation={config['on_rotation']};")
 new_lines.append(f"on_k1={config['on_k1']};")
 sequence_src = '\n'.join(new_lines)
 
