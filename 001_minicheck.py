@@ -8,7 +8,7 @@ start_check: marker,l= 0,kmax= 0,kmin= 0,calib= 0,polarity= 0,type,apertype="cir
 ,exact= -1,nst= -1,fringe= 0,bend_fringe=false,kill_ent_fringe=false,kill_exi_fringe=false,dx= 0,dy= 0,ds= 0,dtheta= 0,dphi= 0,dpsi= 0,aper_tilt= 0,comments;
 ptb_b0pf: translation,dx= -0.03022642196;
 prb_b0pf: yrotation,angle= 0.02670439316;
-b0pf: sbend,l= 1.2,k0= -0.008660083518, k1= -0.05940545468;
+b0pf: sbend,l= 1.2,k0= -0.008660083518, k1:= -0.05940545468*on_k1;
 pte_b0pf: translation,dx= -0.0007490490899;
 pre_b0pf: yrotation,angle= -0.025;
 ptb_sol_f: translation,dx= -0.04999479183;
@@ -32,13 +32,21 @@ ip6w, at = 7.88756965;
 endsequence;
 '''
 
-# new_lines = []
-# for ll in sequence_src.split('\n'):
-#     if 'translation' in ll:
-#         ll = ll.replace(';', "*on_translation;")
-#     new_lines.append(ll)
-# new_lines.append('on_translation=1;')
-# sequence_src = '\n'.join(new_lines)
+config = {
+    'on_translation': 0,
+    'on_k1': 0,
+    'kill_orbit': True
+}
+
+new_lines = []
+for ll in sequence_src.split('\n'):
+    if 'translation' in ll:
+        ll = ll.replace(';', "*on_translation;")
+        ll = ll.replace('dx=', "dx:=")
+    new_lines.append(ll)
+new_lines.append(f"on_translation={config['on_translation']};")
+new_lines.append(f"on_k1={config['on_k1']};")
+sequence_src = '\n'.join(new_lines)
 
 tw_init = {'betx': 84.02557752667167,
             'alfx': 14.23087869857309,
@@ -48,6 +56,12 @@ tw_init = {'betx': 84.02557752667167,
             'px': -0.009838644402766588,
             'y': 0.0,
             'py': 0.0}
+
+if config['kill_orbit']:
+    tw_init['x'] = 0
+    tw_init['px'] = 0
+    tw_init['y'] = 0
+    tw_init['py'] = 0
 
 mad_thick = Madx()
 mad_thick.input(sequence_src)
@@ -67,7 +81,7 @@ select, flag=makethin, class=quadrupole, slice = 20, thick=false;
 select, flag=makethin, class=sextupole, slice = 1, thick=true;
 select, flag=makethin, class=sbend, slice=0;
 
-select, flag=makethin, pattern=b0pf, slice=1000, thick=false;
+select, flag=makethin, pattern=b0pf, slice=1, thick=false;
 
 makethin, sequence=hsr41, style=teapot, makedipedge=false;
 ''')
