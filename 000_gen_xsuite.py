@@ -28,7 +28,27 @@ mad_thick.call('ir10-str-041-05.madx')
 mad_thick.call('ir12-str-041-05.madx')
 seq_name = 'hsr41'
 mad_thick.use(seq_name)
-tw_thick = mad_thick.twiss()
+
+
+
+mad_thick.input(f'''
+seqedit, sequence={seq_name};
+flatten;
+install, element=start_check, class=marker, at=3824.060940;
+flatten;
+endedit;
+''')
+mad_thick.use(seq_name)
+
+# mad_thick.input(f'''
+# seqedit, sequence={seq_name};
+# flatten;
+# cycle, start=start_here;
+# flatten;
+# endedit;
+# ''')
+
+
 seq_thick = mad_thick.sequence[seq_name]
 
 mad_thick.input(f'''
@@ -40,6 +60,11 @@ mad_thin.call(f'{seq_name}_no_expr.seq')
 mad_thin.beam(energy=41.0,particle='antiproton')
 mad_thin.use(seq_name)
 seq_thin = mad_thin.sequence[seq_name]
+tw_thick = mad_thick.twiss()
+tw_thick_df = tw_thick.dframe()
+
+mad_thin.use(seq_name)
+tw_thin = mad_thin.twiss()
 
 # Makethin does not work with zero angle on the bends (putting a very small one)
 bends_with_no_angle= []
@@ -97,20 +122,20 @@ select, flag=makethin, pattern=b2pf, slice=30; thick=false;
 select, flag=makethin, pattern=b1apf, slice=30; thick=false;
 select, flag=makethin, pattern=b1pf, slice=30; thick=false;
 
-select, flag=makethin, pattern=b0apf, slice=10, thick=false;
-select, flag=makethin, pattern=b0pf, slice=10, thick=false;
+!select, flag=makethin, pattern=b0apf, slice=1000, thick=false;
+select, flag=makethin, pattern=b0pf, slice=1000, thick=false;
 
 makethin, sequence={seq_name}, style=teapot, makedipedge=false;
 ''')
 mad_thin.use(seq_name)
 
-tw_thin = mad_thin.twiss()
+# tw_thin = mad_thin.twiss()
 
-# tw_thin = mad_thin.twiss(
-#      x=tw_thick.x[0], px=tw_thick.px[0], y=tw_thick.y[0], py=tw_thick.py[0],
-#      betx=tw_thick.betx[0], bety=tw_thick.bety[0], alfx=tw_thick.alfx[0],
-#      alfy=tw_thick.alfy[0]
-# )
+tw_thin = mad_thin.twiss(
+     x=tw_thick.x[0], px=tw_thick.px[0], y=tw_thick.y[0], py=tw_thick.py[0],
+     betx=tw_thick.betx[0], bety=tw_thick.bety[0], alfx=tw_thick.alfx[0],
+     alfy=tw_thick.alfy[0]
+)
 
 #################################
 # Build line from MAD-X lattice #
@@ -159,12 +184,66 @@ plt.figure()
 plt.plot(tw_thick['s'], tw_thick['betx']/betx_thin_on_thick -1)
 plt.plot(tw_thick['s'], tw_thick['bety']/bety_thin_on_thick -1)
 
+tw_at_check = tw_thick_df.loc[tw_thick_df.name=='start_check:1', :]
 
-plt.legend()
+dct_check = {
+        'betx': tw_at_check.betx.values[0],
+        'alfx': tw_at_check.alfx.values[0],
+        'bety': tw_at_check.bety.values[0],
+        'alfy': tw_at_check.alfy.values[0],
+        'x': tw_at_check.x.values[0],
+        'px': tw_at_check.px.values[0],
+        'y': tw_at_check.y.values[0],
+        'py': tw_at_check.py.values[0],
+}
 
+
+mad_thick.input(f'use, sequence={seq_name}, range=start_check/ip6w;')
+mad_thin.input(f'use, sequence={seq_name}, range=start_check/ip6w;')
+
+tw_check_thick = mad_thick.twiss(betx=tw_at_check.betx.values[0],
+                alfx=tw_at_check.alfx.values[0],
+                bety=tw_at_check.bety.values[0],
+                alfy=tw_at_check.alfy.values[0],
+                x=tw_at_check.x.values[0],
+                px=tw_at_check.px.values[0],
+                y=tw_at_check.y.values[0],
+                py=tw_at_check.py.values[0])
+
+tw_check_thin = mad_thin.twiss(betx=tw_at_check.betx.values[0],
+                alfx=tw_at_check.alfx.values[0],
+                bety=tw_at_check.bety.values[0],
+                alfy=tw_at_check.alfy.values[0],
+                x=tw_at_check.x.values[0],
+                px=tw_at_check.px.values[0],
+                y=tw_at_check.y.values[0],
+                py=tw_at_check.py.values[0])
+
+bety_thin_on_thick_check = np.interp(tw_check_thick.s, tw_check_thin['s'], tw_check_thin['bety'])
+alfy_thin_on_thick_check = np.interp(tw_check_thick.s, tw_check_thin['s'], tw_check_thin['alfy'])
+
+plt.figure()
+plt.plot(tw_check_thick['s'], tw_check_thick['bety']/bety_thin_on_thick_check -1)
+
+s_b0apf = tw_check_thick.dframe().loc[tw_check_thick.name=='b0apf:1', 's'].values[0]
+s_b0pf = tw_check_thick.dframe().loc[tw_check_thick.name=='b0pf:1', 's'].values[0]
+
+plt.axvline(s_b0apf, color='k')
+plt.axvline(s_b0pf, color='r')
 
 plt.show()
 
+mad_thick.input(f'''
+seqedit, sequence={seq_name};
+flatten;
+cycle, start=start_check;
+flatten;
+endedit;
+''')
+
+mad_thick.input(f'''
+save, sequence={seq_name}, file="for_check.seq", noexpr=true;
+''')
 #context = xo.ContextCpu()
 
 
