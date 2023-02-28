@@ -76,11 +76,11 @@ select, flag=makethin, pattern=bxus9m1, slice=30, thick=false;
 select, flag=makethin, pattern=bxus9m2, slice=30, thick=false;
 select, flag=makethin, pattern=bxus9m3, slice=30, thick=false;
 
+select, flag=makethin, pattern=dwarm3, slice=30; thick=false;
+select, flag=makethin, pattern=dwarm4, slice=30; thick=false;
 
-!select, flag=makethin, pattern=dwarm3
-!select, flag=makethin, pattern=dwarm4, slice=10; thick=false;
-!select, flag=makethin, pattern=b3pf, slice=30; thick=false;
-!select, flag=makethin, pattern=b2pf, slice=30; thick=false;
+select, flag=makethin, pattern=b3pf, slice=30; thick=false;
+select, flag=makethin, pattern=b2pf, slice=30; thick=false;
 !select, flag=makethin, pattern=b1apf, slice=30; thick=false;
 !select, flag=makethin, pattern=b1pf, slice=30; thick=false;
 !select, flag=makethin, pattern=b0apf, slice=30; thick=false;
