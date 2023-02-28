@@ -81,8 +81,9 @@ select, flag=makethin, pattern=dwarm4, slice=30; thick=false;
 
 select, flag=makethin, pattern=b3pf, slice=30; thick=false;
 select, flag=makethin, pattern=b2pf, slice=30; thick=false;
-!select, flag=makethin, pattern=b1apf, slice=30; thick=false;
-!select, flag=makethin, pattern=b1pf, slice=30; thick=false;
+
+select, flag=makethin, pattern=b1apf, slice=30; thick=false;
+select, flag=makethin, pattern=b1pf, slice=30; thick=false;
 !select, flag=makethin, pattern=b0apf, slice=30; thick=false;
 !select, flag=makethin, pattern=b0pf, slice=30; thick=false;
 
