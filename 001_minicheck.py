@@ -2,6 +2,15 @@ from cpymad.madx import Madx
 import numpy as np
 import matplotlib.pyplot as plt
 
+config = {
+    'on_translation': 0,
+    'on_rotation': 0,
+    'on_k1': 1,
+    'on_shifts': 0,
+    'kill_orbit': False,
+    'n_slices_bend': 100
+}
+
 sequence_src = '''
 none = 0;
 start_check: marker,l= 0,kmax= 0,kmin= 0,calib= 0,polarity= 0,type,apertype="circle",aperture={ 0},aper_offset={ 0},aper_tol={ 0},aper_vx={ -1},aper_vy={ -1},slot_id= 0,assembly_id= 0,mech_sep= 0,v_pos= 0,magnet= 0,model= -1,method= -1
@@ -32,13 +41,6 @@ ip6w, at = 7.88756965;
 endsequence;
 '''
 
-config = {
-    'on_translation': 0,
-    'on_rotation': 0,
-    'on_k1': 0,
-    'on_shifts': 0,
-    'kill_orbit': True
-}
 
 new_lines = []
 for ll in sequence_src.split('\n'):
@@ -91,7 +93,7 @@ select, flag=makethin, class=quadrupole, slice = 20, thick=false;
 select, flag=makethin, class=sextupole, slice = 1, thick=true;
 select, flag=makethin, class=sbend, slice=0;
 
-select, flag=makethin, pattern=b0pf, slice=1000, thick=false;
+select, flag=makethin, pattern=b0pf, slice={config['n_slices_bend']}, thick=false;
 
 makethin, sequence=hsr41, style=teapot, makedipedge=false;
 ''')
@@ -100,20 +102,27 @@ mad_thin.use('hsr41')
 tw_thin = mad_thin.twiss(**tw_init)
 
 bety_thin_on_thick_check = np.interp(tw_thick.s, tw_thin['s'], np.sqrt(tw_thin['bety']))**2
+alfy_thin_on_thick_check = np.interp(tw_thick.s, tw_thin['s'], tw_thin['alfy'])
 
 plt.close('all')
 plt.figure()
-ax1 = plt.subplot(211)
-plt.plot(tw_thick['s'], tw_thick['bety']/bety_thin_on_thick_check -1)
+ax1 = plt.subplot(311)
+plt.plot(tw_thick['s'], tw_thick['bety']/bety_thin_on_thick_check -1, '.-')
+plt.ylabel(r'$\Delta \beta_y / \beta_y$')
 
-ax2 = plt.subplot(212, sharex=ax1)
+plt.subplot(312, sharex=ax1)
+plt.plot(tw_thick['s'], tw_thick['alfy']/alfy_thin_on_thick_check -1, '.-')
+plt.ylabel(r'$\Delta \alpha_y / \alpha_y$')
+
+ax2 = plt.subplot(313, sharex=ax1)
 plt.plot(tw_thick['s'], tw_thick.x)
 plt.plot(tw_thin['s'], tw_thin.x)
+plt.ylabel(r'$x$')
 
 
 s_b0pf = tw_thick.dframe().loc[tw_thick.name=='b0pf:1', 's'].values[0]
 
 plt.axvline(s_b0pf, color='r')
-
+plt.subplots_adjust(left=.15)
 plt.show()
 
