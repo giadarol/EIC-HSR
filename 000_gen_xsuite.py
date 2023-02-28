@@ -1,4 +1,6 @@
 from cpymad.madx import Madx
+
+import numpy as np
 from matplotlib import pyplot as plt
 
 import xobjects as xo
@@ -41,10 +43,20 @@ seq_thin = mad_thin.sequence[seq_name]
 
 # Makethin does not work with zero angle on the bends (putting a very small one)
 bends_with_no_angle= []
+x_on_bends_with_no_angle = []
+y_on_bends_with_no_angle = []
+k0l_bends_with_no_angle = []
+betx_bends_with_no_angle = []
+bety_bends_with_no_angle = []
 for ee in seq_thin.elements:
      if hasattr(ee, 'k0') and ee.k0 != 0 and ee.angle == 0:
-        ee.angle = 1e-20
+        ee.angle = 1e-30
         bends_with_no_angle.append(ee.name)
+        x_on_bends_with_no_angle.append(tw_thick.x[np.where(tw_thick.name == ee.name + ':1')[0][0]])
+        y_on_bends_with_no_angle.append(tw_thick.y[np.where(tw_thick.name == ee.name + ':1')[0][0]])
+        k0l_bends_with_no_angle.append(ee.k0*ee.l)
+        betx_bends_with_no_angle.append(tw_thick.betx[np.where(tw_thick.name == ee.name + ':1')[0][0]])
+        bety_bends_with_no_angle.append(tw_thick.bety[np.where(tw_thick.name == ee.name + ':1')[0][0]])
 
 tw_after_reload = mad_thin.twiss()
 
@@ -84,10 +96,11 @@ select, flag=makethin, pattern=b2pf, slice=30; thick=false;
 
 select, flag=makethin, pattern=b1apf, slice=30; thick=false;
 select, flag=makethin, pattern=b1pf, slice=30; thick=false;
-!select, flag=makethin, pattern=b0apf, slice=30; thick=false;
-!select, flag=makethin, pattern=b0pf, slice=30; thick=false;
 
-makethin, sequence={seq_name}, style=teapot, makedipedge=true;
+select, flag=makethin, pattern=b0apf, slice=10, thick=false;
+select, flag=makethin, pattern=b0pf, slice=10, thick=false;
+
+makethin, sequence={seq_name}, style=teapot, makedipedge=false;
 ''')
 mad_thin.use(seq_name)
 
@@ -114,22 +127,42 @@ tw_thin = mad_thin.twiss()
 
 plt.close('all')
 
+import numpy as np
+
+s_thick = tw_thick['s']
+betx_thin_on_thick = np.interp(s_thick, tw_thin['s'], tw_thin['betx'])
+bety_thin_on_thick = np.interp(s_thick, tw_thin['s'], tw_thin['bety'])
+
 plt.figure()
-ax1 = plt.subplot(2,1,1)
+ax1 = plt.subplot(3,1,1)
 plt.plot(tw_thick['s'], tw_thick['betx'], label='betx thick')
 plt.plot(tw_thick['s'], tw_thick['bety'], label='bety thick')
+#plt.plot(tw_thick['s'], bet_thin_on_thick, '.', label='betx thin on thick')
 plt.plot(tw_thin['s'], tw_thin['betx'], label='betx thin')
 plt.plot(tw_thin['s'], tw_thin['bety'], label='bety thin')
 # plt.plot(tw_xs['s'], tw_xs['betx'], label='betx xsuite')
 # plt.plot(tw_xs['s'], tw_xs['bety'], label='bety xsuite')
 
-ax2 = plt.subplot(2,1,2, sharex=ax1)
+ax2 = plt.subplot(3,1,2, sharex=ax1)
 plt.plot(tw_thick['s'], tw_thick['x'], label='x thick')
 plt.plot(tw_thick['s'], tw_thick['y'], label='y thick')
 plt.plot(tw_thin['s'], tw_thin['x'], label='x thin')
 plt.plot(tw_thin['s'], tw_thin['y'], label='y thin')
 
+ax3 = plt.subplot(3,1,3, sharex=ax1)
+plt.plot(tw_thick['s'], tw_thick['px'], label='px thick')
+# plt.plot(tw_thick['s'], tw_thick['py'], label='py thick')
+plt.plot(tw_thin['s'], tw_thin['px'], label='px thin')
+# plt.plot(tw_thin['s'], tw_thin['py'], label='py thin')
+
+plt.figure()
+plt.plot(tw_thick['s'], tw_thick['betx']/betx_thin_on_thick -1)
+plt.plot(tw_thick['s'], tw_thick['bety']/bety_thin_on_thick -1)
+
+
 plt.legend()
+
+
 plt.show()
 
 #context = xo.ContextCpu()
