@@ -138,13 +138,25 @@ mad_thin.use(seq_name)
 
 tw_init = mad_thin.twiss().dframe()
 
+# mad_thin.input(f'''
+# use, sequence={seq_name}, range=start_check/ip6w;
+# match,
+#         betx={tw_init[tw_init.name=='start_check:1']['bety'][0]},
+#         bety={tw_init[tw_init.name=='start_check:1']['bety'][0]},
+#         alfx={tw_init[tw_init.name=='start_check:1']['alfy'][0]},
+#         alfy={tw_init[tw_init.name=='start_check:1']['alfy'][0]};
+#    constraint, range=ip6w, bety={tw_thick.dframe()[tw_thick.name=='ip6w:1']['bety'][0]};
+#    vary, name=b0pf_k1_corr, step=1e-5;
+#    jacobian, calls=5, tolerance=1e-20;
+# endmatch;
+
+# use, sequence={seq_name};
+
+# '''
+# )
+
 mad_thin.input(f'''
-use, sequence={seq_name}, range=start_check/ip6w;
-match,
-        betx={tw_init[tw_init.name=='start_check:1']['bety'][0]},
-        bety={tw_init[tw_init.name=='start_check:1']['bety'][0]},
-        alfx={tw_init[tw_init.name=='start_check:1']['alfy'][0]},
-        alfy={tw_init[tw_init.name=='start_check:1']['alfy'][0]};
+match;
    constraint, range=ip6w, bety={tw_thick.dframe()[tw_thick.name=='ip6w:1']['bety'][0]};
    vary, name=b0pf_k1_corr, step=1e-5;
    jacobian, calls=5, tolerance=1e-20;
@@ -159,13 +171,14 @@ use, sequence={seq_name};
 
 
 
-# tw_thin = mad_thin.twiss()
 
-tw_thin = mad_thin.twiss(
-     x=tw_thick.x[0], px=tw_thick.px[0], y=tw_thick.y[0], py=tw_thick.py[0],
-     betx=tw_thick.betx[0], bety=tw_thick.bety[0], alfx=tw_thick.alfx[0],
-     alfy=tw_thick.alfy[0]
-)
+tw_thin = mad_thin.twiss()
+
+# tw_thin = mad_thin.twiss(
+#      x=tw_thick.x[0], px=tw_thick.px[0], y=tw_thick.y[0], py=tw_thick.py[0],
+#      betx=tw_thick.betx[0], bety=tw_thick.bety[0], alfx=tw_thick.alfx[0],
+#      alfy=tw_thick.alfy[0]
+# )
 
 #################################
 # Build line from MAD-X lattice #
@@ -257,9 +270,11 @@ plt.plot(tw_check_thick['s'], tw_check_thick['bety']/bety_thin_on_thick_check -1
 
 # s_b0apf = tw_check_thick.dframe().loc[tw_check_thick.name=='b0apf:1', 's'].values[0]
 s_b0pf = tw_check_thick.dframe().loc[tw_check_thick.name=='b0pf:1', 's'].values[0]
+s_ip6w = tw_check_thick.dframe().loc[tw_check_thick.name=='ip6w:1', 's'].values[0]
 
 # plt.axvline(s_b0apf, color='k')
 plt.axvline(s_b0pf, color='r')
+plt.axvline(s_ip6w, color='g')
 
 plt.show()
 
