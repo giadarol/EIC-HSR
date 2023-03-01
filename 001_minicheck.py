@@ -25,7 +25,7 @@ pte_b0pf: translation,dx= -0.0007490490899;
 pre_b0pf: yrotation,angle= -0.025;
 ptb_sol_f: translation,dx= -0.04999479183;
 prb_sol_f: yrotation,angle= 0.025;
-sol_half: solenoid,l= 2;
+sol_half: drift,l= 2;
 star_detect_f: sol_half;
 pre_sol_f: yrotation,angle= -0.025;
 ip6w: marker;
@@ -93,25 +93,11 @@ mad_thin.use(sequence='hsr41')
 mad_thin.input(f'''
 select, flag=makethin, clear;
 select, flag=makethin, class=quadrupole, slice = 20, thick=false;
-select, flag=makethin, class=sextupole, slice = 1, thick=true;
-select, flag=makethin, class=sbend, slice=0;
-
 select, flag=makethin, pattern=b0pf, slice={config['n_slices_bend']}, thick=false;
 
-makethin, sequence=hsr41, style=teapot, makedipedge=false;
+makethin, sequence=hsr41, style=teapot, makedipedge=true;
 ''')
 mad_thin.use('hsr41')
-
-mad_thin.input(f'''
-match,
-    betx={tw_init['betx']}, alfx={tw_init['alfx']},
-    bety={tw_init['bety']}, alfy={tw_init['alfy']};
-   constraint, range=#e, bety={tw_thick['bety'][-1]};
-   vary, name=corr_k1, step=1e-5;
-   jacobian, calls=5, tolerance=1e-20;
-endmatch;
-'''
-)
 
 tw_thin = mad_thin.twiss(**tw_init)
 
@@ -120,17 +106,14 @@ alfy_thin_on_thick_check = np.interp(tw_thick.s, tw_thin['s'], tw_thin['alfy'])
 
 plt.close('all')
 plt.figure()
-ax1 = plt.subplot(311)
-plt.plot(tw_thick['s'], tw_thick['bety']/bety_thin_on_thick_check -1, '.-')
+ax1 = plt.subplot(211)
+plt.plot(tw_thick['s'][:-2], (tw_thick['bety']/bety_thin_on_thick_check -1)[:-2], '.-')
 plt.ylabel(r'$\Delta \beta_y / \beta_y$')
 
-plt.subplot(312, sharex=ax1)
-plt.plot(tw_thick['s'], tw_thick['alfy']/alfy_thin_on_thick_check -1, '.-')
-plt.ylabel(r'$\Delta \alpha_y / \alpha_y$')
-
-ax2 = plt.subplot(313, sharex=ax1)
+ax2 = plt.subplot(212, sharex=ax1)
 plt.plot(tw_thick['s'], tw_thick.x)
 plt.plot(tw_thin['s'], tw_thin.x)
+
 plt.ylabel(r'$x$')
 
 
