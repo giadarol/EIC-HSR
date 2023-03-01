@@ -173,7 +173,7 @@ plt.plot(tw_thick['s'], tw_thick['x'], label='x thick')
 #plt.plot(tw_thick['s'], tw_thick['y'], label='y thick')
 plt.plot(tw_thin['s'], tw_thin['x'], label='x thin')
 #plt.plot(tw_thin['s'], tw_thin['y'], label='y thin')
-#plt.plot(tw_xs['s'], tw_xs['x'], label='x xsuite')
+plt.plot(tw_xs['s'], tw_xs['x'], label='x xsuite')
 #plt.plot(tw_xs['s'], tw_xs['y'], label='y xsuite')
 
 ax3 = plt.subplot(3,1,3, sharex=ax1)
