@@ -3,21 +3,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 config = {
-    'on_translation': 0,
-    'on_rotation': 0,
+    'on_translation': 1,
+    'on_rotation': 1,
     'on_k1': 1,
-    'on_shifts': 0,
+    'on_shifts': 1,
     'kill_orbit': False,
-    'n_slices_bend': 100
+    'n_slices_bend': 1000
 }
 
 sequence_src = '''
+
+option, thin_cf=false;
+
 none = 0;
 start_check: marker,l= 0,kmax= 0,kmin= 0,calib= 0,polarity= 0,type,apertype="circle",aperture={ 0},aper_offset={ 0},aper_tol={ 0},aper_vx={ -1},aper_vy={ -1},slot_id= 0,assembly_id= 0,mech_sep= 0,v_pos= 0,magnet= 0,model= -1,method= -1
 ,exact= -1,nst= -1,fringe= 0,bend_fringe=false,kill_ent_fringe=false,kill_exi_fringe=false,dx= 0,dy= 0,ds= 0,dtheta= 0,dphi= 0,dpsi= 0,aper_tilt= 0,comments;
 ptb_b0pf: translation,dx= -0.03022642196;
 prb_b0pf: yrotation,angle= 0.02670439316;
-b0pf: sbend,l= 1.2,k0= -0.008660083518, k1:= -0.05940545468*on_k1, angle=1e-30;
+b0pf: sbend,l= 1.2,k0= -0.008660083518, k1:= -0.05940545468*on_k1 + corr_k1, angle=1e-30;
 pte_b0pf: translation,dx= -0.0007490490899;
 pre_b0pf: yrotation,angle= -0.025;
 ptb_sol_f: translation,dx= -0.04999479183;
@@ -98,6 +101,17 @@ select, flag=makethin, pattern=b0pf, slice={config['n_slices_bend']}, thick=fals
 makethin, sequence=hsr41, style=teapot, makedipedge=false;
 ''')
 mad_thin.use('hsr41')
+
+mad_thin.input(f'''
+match,
+    betx={tw_init['betx']}, alfx={tw_init['alfx']},
+    bety={tw_init['bety']}, alfy={tw_init['alfy']};
+   constraint, range=#e, bety={tw_thick['bety'][-1]};
+   vary, name=corr_k1, step=1e-5;
+   jacobian, calls=5, tolerance=1e-20;
+endmatch;
+'''
+)
 
 tw_thin = mad_thin.twiss(**tw_init)
 

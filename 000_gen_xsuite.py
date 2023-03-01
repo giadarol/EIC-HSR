@@ -41,6 +41,7 @@ endedit;
 ''')
 mad_thick.use(seq_name)
 
+
 # mad_thick.input(f'''
 # seqedit, sequence={seq_name};
 # flatten;
@@ -63,6 +64,11 @@ mad_thin.use(seq_name)
 seq_thin = mad_thin.sequence[seq_name]
 tw_thick = mad_thick.twiss()
 tw_thick_df = tw_thick.dframe()
+tw_at_check = tw_thick_df.loc[tw_thick_df.name=='start_check:1', :]
+
+mad_thin.input(f'''
+   b0pf, k1:= {mad_thick.elements['b0pf'].k1} + b0pf_k1_corr;
+''')
 
 mad_thin.use(seq_name)
 tw_thin = mad_thin.twiss()
@@ -123,12 +129,35 @@ select, flag=makethin, pattern=b2pf, slice=30; thick=false;
 select, flag=makethin, pattern=b1apf, slice=30; thick=false;
 select, flag=makethin, pattern=b1pf, slice=30; thick=false;
 
-!select, flag=makethin, pattern=b0apf, slice=1000, thick=false;
+select, flag=makethin, pattern=b0apf, slice=1000, thick=false;
 select, flag=makethin, pattern=b0pf, slice=1000, thick=false;
 
 makethin, sequence={seq_name}, style=teapot, makedipedge=false;
 ''')
 mad_thin.use(seq_name)
+
+tw_init = mad_thin.twiss().dframe()
+
+mad_thin.input(f'''
+use, sequence={seq_name}, range=start_check/ip6w;
+match,
+        betx={tw_init[tw_init.name=='start_check:1']['bety'][0]},
+        bety={tw_init[tw_init.name=='start_check:1']['bety'][0]},
+        alfx={tw_init[tw_init.name=='start_check:1']['alfy'][0]},
+        alfy={tw_init[tw_init.name=='start_check:1']['alfy'][0]};
+   constraint, range=ip6w, bety={tw_thick.dframe()[tw_thick.name=='ip6w:1']['bety'][0]};
+   vary, name=b0pf_k1_corr, step=1e-5;
+   jacobian, calls=5, tolerance=1e-20;
+endmatch;
+
+use, sequence={seq_name};
+
+'''
+)
+
+
+
+
 
 # tw_thin = mad_thin.twiss()
 
@@ -185,7 +214,7 @@ plt.figure()
 plt.plot(tw_thick['s'], tw_thick['betx']/betx_thin_on_thick -1)
 plt.plot(tw_thick['s'], tw_thick['bety']/bety_thin_on_thick -1)
 
-tw_at_check = tw_thick_df.loc[tw_thick_df.name=='start_check:1', :]
+
 
 dct_check = {
         'betx': tw_at_check.betx.values[0],
@@ -234,17 +263,17 @@ plt.axvline(s_b0pf, color='r')
 
 plt.show()
 
-mad_thick.input(f'''
-seqedit, sequence={seq_name};
-flatten;
-cycle, start=start_check;
-flatten;
-endedit;
-''')
+# mad_thick.input(f'''
+# seqedit, sequence={seq_name};
+# flatten;
+# cycle, start=start_check;
+# flatten;
+# endedit;
+# ''')
 
-mad_thick.input(f'''
-save, sequence={seq_name}, file="for_check.seq", noexpr=true;
-''')
+# mad_thick.input(f'''
+# save, sequence={seq_name}, file="for_check.seq", noexpr=true;
+# ''')
 #context = xo.ContextCpu()
 
 
