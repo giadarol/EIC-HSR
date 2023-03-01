@@ -97,8 +97,8 @@ select, flag=makethin, pattern=bxus9m1, slice=30, thick=false;
 select, flag=makethin, pattern=bxus9m2, slice=30, thick=false;
 select, flag=makethin, pattern=bxus9m3, slice=30, thick=false;
 
-!select, flag=makethin, pattern=dwarm3, slice=30; thick=false;
-!select, flag=makethin, pattern=dwarm4, slice=30; thick=false;
+select, flag=makethin, pattern=dwarm3, slice=30; thick=false;
+select, flag=makethin, pattern=dwarm4, slice=30; thick=false;
 
 select, flag=makethin, pattern=b3pf, slice=30; thick=false;
 select, flag=makethin, pattern=b2pf, slice=30; thick=false;
@@ -106,8 +106,8 @@ select, flag=makethin, pattern=b2pf, slice=30; thick=false;
 select, flag=makethin, pattern=b1apf, slice=30; thick=false;
 select, flag=makethin, pattern=b1pf, slice=30; thick=false;
 
-select, flag=makethin, pattern=b0apf, slice=1000, thick=false;
-select, flag=makethin, pattern=b0pf, slice=1000, thick=false;
+select, flag=makethin, pattern=b0apf, slice=30, thick=false;
+select, flag=makethin, pattern=b0pf, slice=30, thick=false;
 
 makethin, sequence={seq_name}, style=teapot, makedipedge=false;
 ''')
@@ -142,14 +142,14 @@ print('Thin:  ', mad_thin.table.summ.dq1[0], mad_thin.table.summ.dq2[0])
 # Build line from MAD-X lattice #
 #################################
 
-# line = xt.Line.from_madx_sequence(sequence=mad_thin.sequence[seq_name],
-#            deferred_expressions=False, install_apertures=False,
-#            apply_madx_errors=False)
-# line.particle_ref = xp.Particles(gamma=seq_thin.beam.gamma,
-#                                  mass0=xp.PROTON_MASS_EV,
-#                                  q0=seq_thin.beam.charge)
-# line.build_tracker()
-# tw_xs = line.twiss(method='4d')
+line = xt.Line.from_madx_sequence(sequence=mad_thin.sequence[seq_name],
+           deferred_expressions=False, install_apertures=False,
+           apply_madx_errors=False)
+line.particle_ref = xp.Particles(gamma=seq_thin.beam.gamma,
+                                 mass0=xp.PROTON_MASS_EV,
+                                 q0=seq_thin.beam.charge)
+line.build_tracker()
+tw_xs = line.twiss(method='4d')
 
 plt.close('all')
 
@@ -163,17 +163,18 @@ plt.figure()
 ax1 = plt.subplot(3,1,1)
 plt.plot(tw_thick['s'], tw_thick['betx'], label='betx thick')
 plt.plot(tw_thick['s'], tw_thick['bety'], label='bety thick')
-#plt.plot(tw_thick['s'], bet_thin_on_thick, '.', label='betx thin on thick')
 plt.plot(tw_thin['s'], tw_thin['betx'], label='betx thin')
 plt.plot(tw_thin['s'], tw_thin['bety'], label='bety thin')
-# plt.plot(tw_xs['s'], tw_xs['betx'], label='betx xsuite')
-# plt.plot(tw_xs['s'], tw_xs['bety'], label='bety xsuite')
+plt.plot(tw_xs['s'], tw_xs['betx'], label='betx xsuite')
+plt.plot(tw_xs['s'], tw_xs['bety'], label='bety xsuite')
 
 ax2 = plt.subplot(3,1,2, sharex=ax1)
 plt.plot(tw_thick['s'], tw_thick['x'], label='x thick')
-plt.plot(tw_thick['s'], tw_thick['y'], label='y thick')
+#plt.plot(tw_thick['s'], tw_thick['y'], label='y thick')
 plt.plot(tw_thin['s'], tw_thin['x'], label='x thin')
-plt.plot(tw_thin['s'], tw_thin['y'], label='y thin')
+#plt.plot(tw_thin['s'], tw_thin['y'], label='y thin')
+#plt.plot(tw_xs['s'], tw_xs['x'], label='x xsuite')
+#plt.plot(tw_xs['s'], tw_xs['y'], label='y xsuite')
 
 ax3 = plt.subplot(3,1,3, sharex=ax1)
 plt.plot(tw_thick['s'], tw_thick['px'], label='px thick')
