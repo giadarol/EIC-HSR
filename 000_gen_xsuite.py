@@ -40,17 +40,6 @@ flatten;
 endedit;
 ''')
 mad_thick.use(seq_name)
-
-
-# mad_thick.input(f'''
-# seqedit, sequence={seq_name};
-# flatten;
-# cycle, start=start_here;
-# flatten;
-# endedit;
-# ''')
-
-
 seq_thick = mad_thick.sequence[seq_name]
 
 mad_thick.input(f'''
@@ -74,21 +63,9 @@ mad_thin.use(seq_name)
 tw_thin = mad_thin.twiss()
 
 # Makethin does not work with zero angle on the bends (putting a very small one)
-bends_with_no_angle= []
-x_on_bends_with_no_angle = []
-y_on_bends_with_no_angle = []
-k0l_bends_with_no_angle = []
-betx_bends_with_no_angle = []
-bety_bends_with_no_angle = []
 for ee in seq_thin.elements:
      if hasattr(ee, 'k0') and ee.k0 != 0 and ee.angle == 0:
         ee.angle = 1e-30
-        bends_with_no_angle.append(ee.name)
-        x_on_bends_with_no_angle.append(tw_thick.x[np.where(tw_thick.name == ee.name + ':1')[0][0]])
-        y_on_bends_with_no_angle.append(tw_thick.y[np.where(tw_thick.name == ee.name + ':1')[0][0]])
-        k0l_bends_with_no_angle.append(ee.k0*ee.l)
-        betx_bends_with_no_angle.append(tw_thick.betx[np.where(tw_thick.name == ee.name + ':1')[0][0]])
-        bety_bends_with_no_angle.append(tw_thick.bety[np.where(tw_thick.name == ee.name + ':1')[0][0]])
 
 tw_after_reload = mad_thin.twiss()
 
@@ -120,8 +97,8 @@ select, flag=makethin, pattern=bxus9m1, slice=30, thick=false;
 select, flag=makethin, pattern=bxus9m2, slice=30, thick=false;
 select, flag=makethin, pattern=bxus9m3, slice=30, thick=false;
 
-select, flag=makethin, pattern=dwarm3, slice=30; thick=false;
-select, flag=makethin, pattern=dwarm4, slice=30; thick=false;
+!select, flag=makethin, pattern=dwarm3, slice=30; thick=false;
+!select, flag=makethin, pattern=dwarm4, slice=30; thick=false;
 
 select, flag=makethin, pattern=b3pf, slice=30; thick=false;
 select, flag=makethin, pattern=b2pf, slice=30; thick=false;
@@ -136,43 +113,24 @@ makethin, sequence={seq_name}, style=teapot, makedipedge=false;
 ''')
 mad_thin.use(seq_name)
 
-tw_init = mad_thin.twiss().dframe()
-
-# mad_thin.input(f'''
-# use, sequence={seq_name}, range=start_check/ip6w;
-# match,
-#         betx={tw_init[tw_init.name=='start_check:1']['bety'][0]},
-#         bety={tw_init[tw_init.name=='start_check:1']['bety'][0]},
-#         alfx={tw_init[tw_init.name=='start_check:1']['alfy'][0]},
-#         alfy={tw_init[tw_init.name=='start_check:1']['alfy'][0]};
-#    constraint, range=ip6w, bety={tw_thick.dframe()[tw_thick.name=='ip6w:1']['bety'][0]};
-#    vary, name=b0pf_k1_corr, step=1e-5;
-#    jacobian, calls=5, tolerance=1e-20;
-# endmatch;
-
-# use, sequence={seq_name};
-
-# '''
-# )
-
 mad_thin.input(f'''
 match;
    constraint, range=ip6w, bety={tw_thick.dframe()[tw_thick.name=='ip6w:1']['bety'][0]};
    vary, name=b0pf_k1_corr, step=1e-5;
    jacobian, calls=5, tolerance=1e-20;
 endmatch;
-
-use, sequence={seq_name};
-
 '''
 )
 
-
-
-
-
-
 tw_thin = mad_thin.twiss()
+
+# Compare tunes and chromaticities
+print('Tunes')
+print('Thick: ', tw_thick.dframe()[tw_thick.name=='ip6w:1']['mux'][-1], tw_thick.dframe()[tw_thick.name=='ip6w:1']['muy'][-1])
+print('Thin: ', tw_thin.dframe()[tw_thin.name=='ip6w:1']['mux'][-1], tw_thin.dframe()[tw_thin.name=='ip6w:1']['muy'][-1])
+print('Chromaticities')
+print('Thick: ', mad_thick.table.summ.dq1[0], mad_thick.table.summ.dq2[0])
+print('Thin:  ', mad_thin.table.summ.dq1[0], mad_thin.table.summ.dq2[0])
 
 # tw_thin = mad_thin.twiss(
 #      x=tw_thick.x[0], px=tw_thick.px[0], y=tw_thick.y[0], py=tw_thick.py[0],
@@ -226,71 +184,5 @@ plt.plot(tw_thin['s'], tw_thin['px'], label='px thin')
 plt.figure()
 plt.plot(tw_thick['s'], tw_thick['betx']/betx_thin_on_thick -1)
 plt.plot(tw_thick['s'], tw_thick['bety']/bety_thin_on_thick -1)
-
-
-
-dct_check = {
-        'betx': tw_at_check.betx.values[0],
-        'alfx': tw_at_check.alfx.values[0],
-        'bety': tw_at_check.bety.values[0],
-        'alfy': tw_at_check.alfy.values[0],
-        'x': tw_at_check.x.values[0],
-        'px': tw_at_check.px.values[0],
-        'y': tw_at_check.y.values[0],
-        'py': tw_at_check.py.values[0],
-}
-
-
-mad_thick.input(f'use, sequence={seq_name}, range=start_check/ip6w;')
-mad_thin.input(f'use, sequence={seq_name}, range=start_check/ip6w;')
-
-tw_check_thick = mad_thick.twiss(betx=tw_at_check.betx.values[0],
-                alfx=tw_at_check.alfx.values[0],
-                bety=tw_at_check.bety.values[0],
-                alfy=tw_at_check.alfy.values[0],
-                x=tw_at_check.x.values[0],
-                px=tw_at_check.px.values[0],
-                y=tw_at_check.y.values[0],
-                py=tw_at_check.py.values[0])
-
-tw_check_thin = mad_thin.twiss(betx=tw_at_check.betx.values[0],
-                alfx=tw_at_check.alfx.values[0],
-                bety=tw_at_check.bety.values[0],
-                alfy=tw_at_check.alfy.values[0],
-                x=tw_at_check.x.values[0],
-                px=tw_at_check.px.values[0],
-                y=tw_at_check.y.values[0],
-                py=tw_at_check.py.values[0])
-
-bety_thin_on_thick_check = np.interp(tw_check_thick.s, tw_check_thin['s'], tw_check_thin['bety'])
-alfy_thin_on_thick_check = np.interp(tw_check_thick.s, tw_check_thin['s'], tw_check_thin['alfy'])
-
-plt.figure()
-plt.plot(tw_check_thick['s'], tw_check_thick['bety']/bety_thin_on_thick_check -1)
-
-# s_b0apf = tw_check_thick.dframe().loc[tw_check_thick.name=='b0apf:1', 's'].values[0]
-s_b0pf = tw_check_thick.dframe().loc[tw_check_thick.name=='b0pf:1', 's'].values[0]
-s_ip6w = tw_check_thick.dframe().loc[tw_check_thick.name=='ip6w:1', 's'].values[0]
-
-# plt.axvline(s_b0apf, color='k')
-plt.axvline(s_b0pf, color='r')
-plt.axvline(s_ip6w, color='g')
-
-plt.show()
-
-# mad_thick.input(f'''
-# seqedit, sequence={seq_name};
-# flatten;
-# cycle, start=start_check;
-# flatten;
-# endedit;
-# ''')
-
-# mad_thick.input(f'''
-# save, sequence={seq_name}, file="for_check.seq", noexpr=true;
-# ''')
-#context = xo.ContextCpu()
-
-
 
 plt.show()
