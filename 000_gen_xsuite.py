@@ -29,8 +29,6 @@ mad_thick.call('ir12-str-041-05.madx')
 seq_name = 'hsr41'
 mad_thick.use(seq_name)
 
-
-
 mad_thick.input(f'''
 seqedit, sequence={seq_name};
 flatten;
@@ -64,7 +62,7 @@ tw_thin = mad_thin.twiss()
 
 # Makethin does not work with zero angle on the bends (putting a very small one)
 for ee in seq_thin.elements:
-     if hasattr(ee, 'k0') and ee.k0 != 0 and ee.angle == 0:
+    if hasattr(ee, 'k0') and ee.k0 != 0 and ee.angle == 0:
         ee.angle = 1e-30
 
 tw_after_reload = mad_thin.twiss()
@@ -185,5 +183,54 @@ plt.plot(tw_thin['s'], tw_thin['px'], label='px thin')
 plt.figure()
 plt.plot(tw_thick['s'], tw_thick['betx']/betx_thin_on_thick -1)
 plt.plot(tw_thick['s'], tw_thick['bety']/bety_thin_on_thick -1)
+
+# Check xsuite orbit
+
+p_test = line.build_particles(
+    x=tw_thin['x'][0],
+    px=tw_thin['px'][0],
+    y=tw_thin['y'][0],
+    py=tw_thin['py'][0],
+    delta=0, zeta=0
+)
+
+line.track(p_test, turn_by_turn_monitor='ONE_TURN_EBE')
+line.config.XTRACK_USE_EXACT_DRIFTS = True
+xsres = line.record_last_track
+
+plt.figure()
+ax1 = plt.subplot(2,1,1)
+plt.plot(tw_thin.s, tw_thin.x, '.-')
+plt.plot(xsres.s.T, xsres.x.T, 'x-')
+
+ax2 = plt.subplot(2,1,2, sharex=ax1)
+plt.plot(tw_thin.s, tw_thin.px, '.-')
+plt.plot(xsres.s.T, xsres.px.T, 'x-')
+
+# Check first yrotation
+i_exit = list(tw_thin.name).index('pre_sol_r:1')
+i_entry = i_exit - 1
+
+x = tw_thin.x[i_entry]
+px = tw_thin.px[i_entry]
+y = tw_thin.y[i_entry]
+py = tw_thin.py[i_entry]
+
+x_exit = tw_thin.x[i_exit]
+px_exit = tw_thin.px[i_exit]
+y_exit = tw_thin.y[i_exit]
+py_exit = tw_thin.py[i_exit]
+
+pp = line.build_particles(x=x, px=px, y=y, py=py, delta=0, zeta=0)
+pp_entry = pp.copy()
+line['pre_sol_r'].track(pp)
+
+angle = -0.025
+ca = np.cos(-angle)
+sa = np.sin(-angle)
+ta = np.tan(-angle)
+
+pz_ref = np.sqrt(1 - px*px - py*py) # On momentum particle
+px_ref = ca*px + sa*pz_ref
 
 plt.show()
